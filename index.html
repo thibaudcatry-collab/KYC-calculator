@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hawkvibes KYC Performance Calculator</title>
+    <title>Hawkvibes Performance Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { 
             font-family: 'Inter', sans-serif;
-            min-height: auto; 
+            background-color: #f8fafc; /* bg-slate-50 */
+            color: #1e293b; /* text-slate-800 */
+            /* Ensure no scrollbars on body if iframe fits content */
+            margin: 0;
             padding: 20px;
         }
         /* Custom range slider styling */
@@ -24,96 +27,164 @@
         input[type=range]:focus {
             outline: none; 
         }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 flex flex-col items-center">
+<body class="flex flex-col items-center">
 
     <div class="w-full max-w-4xl">
         
         <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-900 mb-2">Hawkvibes KYC Calculator</h1>
-            <p class="text-slate-500">Compliance Performance Framework (KYC/Onboarding)</p>
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-slate-900">Hawkvibes Calculator</h1>
+            <p class="text-sm text-slate-500">Compliance Performance Framework</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Workflow Toggle -->
+        <div class="flex justify-center mb-6">
+            <div class="bg-white p-1 rounded-lg shadow-sm border border-slate-200 inline-flex">
+                <button onclick="switchWorkflow('kyc')" id="tab-kyc" class="px-5 py-2 rounded-md text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-user-check mr-2"></i> KYC / Onboarding
+                </button>
+                <button onclick="switchWorkflow('monitoring')" id="tab-monitoring" class="px-5 py-2 rounded-md text-sm font-bold transition-all text-slate-500 hover:bg-slate-50">
+                    <i class="fa-solid fa-bell mr-2"></i> Monitoring / Alerts
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             
             <!-- Input Section -->
-            <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-slate-200">
-                <h2 class="text-xl font-semibold mb-6 flex items-center text-indigo-700">
-                    <i class="fa-solid fa-sliders mr-2"></i> Performance Inputs
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                <h2 class="text-lg font-bold mb-4 flex items-center text-indigo-700" id="inputsTitle">
+                    <i class="fa-solid fa-sliders mr-2"></i> KYC Inputs
                 </h2>
 
-                <!-- 1. QA Score Input -->
-                <div class="mb-8 border-b pb-6 border-slate-200">
+                <!-- 1. QA Score Input (Universal) -->
+                <div class="mb-6 border-b border-slate-100 pb-4">
                     <label class="block text-sm font-bold text-slate-700 mb-2">1. Quarterly QA Score (%)</label>
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
                         <input type="range" id="qaInput" min="0" max="100" value="90.0" step="0.1" 
                             class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
-                        <div class="w-24">
+                        <div class="w-20">
                             <input type="number" id="qaNumber" value="90.0" min="0" max="100" step="0.1"
-                                class="w-full p-2 text-center border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-indigo-700 text-lg">
+                                class="w-full p-1.5 text-center border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-indigo-700 text-base">
                         </div>
                     </div>
-                    <div class="flex justify-between text-xs text-slate-400 mt-2 font-medium">
-                        <span class="text-red-400">Critical (<80%)</span>
-                        <span class="text-orange-400">Below (80-89.9%)</span>
-                        <span class="text-blue-400">Meets (90%)</span>
-                        <span class="text-indigo-400">Exceeds (95%)</span>
-                        <span class="text-purple-500">Unicorn (100%)</span>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-2 font-medium uppercase tracking-wider">
+                        <span class="text-red-400">Critical</span>
+                        <span class="text-orange-400">Below</span>
+                        <span class="text-blue-400">Meets</span>
+                        <span class="text-indigo-400">Exceeds</span>
+                        <span class="text-purple-500">Unicorn</span>
                     </div>
                 </div>
 
-                <!-- 2. Team TAT Multiplier -->
-                <div class="mb-8 border-b pb-6 border-slate-200">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">2. Team TAT Multiplier (Collective Efficiency)</label>
-                    <p class="text-xs text-slate-500 mb-3">Based on Team's % of cases reviewed within 1 business day.</p>
-                    <div class="grid grid-cols-1 gap-3">
+                <!-- 2. Team Multiplier Section -->
+                <div class="mb-6 border-b border-slate-100 pb-4">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">2. Team Collective Measure</label>
+                    
+                    <!-- KYC Specific Input -->
+                    <div id="kycTeamInput" class="fade-in">
+                        <p class="text-xs text-slate-500 mb-2">Metric: % of cases reviewed within 1 business day.</p>
                         <div class="relative">
                             <select id="teamTatInput" onchange="calculate();"
-                                class="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
-                                <option value="0.5">Excellent TAT: ≥ 85% Compliance (+0.5)</option>
-                                <option value="0" selected>Target TAT: 80% to 84.9% Compliance (0.0)</option>
-                                <option value="-1.0">Poor TAT: < 80% Compliance (-1.0)</option>
+                                class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-sm appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
+                                <option value="0.5">Excellent: ≥ 85% Compliance (+0.5)</option>
+                                <option value="0" selected>Target: 80% to 84.9% Compliance (0.0)</option>
+                                <option value="-1.0">Poor: < 80% Compliance (-1.0)</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                                 <i class="fa-solid fa-chevron-down text-xs"></i>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Monitoring Specific Input (2 SLAs) -->
+                    <div id="monitoringTeamInput" class="hidden fade-in space-y-3">
+                        <p class="text-xs text-slate-500 mb-1">Select the team's performance for BOTH targets (Target is ≥ 70%):</p>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- SLA 1 -->
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200">
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">A. Real-Time (12h)</label>
+                                <div class="flex flex-col space-y-1">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="sla1" value="met" class="peer sr-only" onchange="calculate()" checked>
+                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-green-100 peer-checked:border-green-500 peer-checked:text-green-800 transition-all">
+                                            <i class="fa-solid fa-check mr-1"></i> Met
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="sla1" value="missed" class="peer sr-only" onchange="calculate()">
+                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-red-100 peer-checked:border-red-500 peer-checked:text-red-800 transition-all">
+                                            <i class="fa-solid fa-xmark mr-1"></i> Missed
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- SLA 2 -->
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200">
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">B. Retro. (10d)</label>
+                                <div class="flex flex-col space-y-1">
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="sla2" value="met" class="peer sr-only" onchange="calculate()" checked>
+                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-green-100 peer-checked:border-green-500 peer-checked:text-green-800 transition-all">
+                                            <i class="fa-solid fa-check mr-1"></i> Met
+                                        </div>
+                                    </label>
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="sla2" value="missed" class="peer sr-only" onchange="calculate()">
+                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-red-100 peer-checked:border-red-500 peer-checked:text-red-800 transition-all">
+                                            <i class="fa-solid fa-xmark mr-1"></i> Missed
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculated Result Display -->
+                        <div class="text-right text-xs font-bold text-indigo-600" id="monitoringTeamResult">
+                            Multiplier: +0.5
                         </div>
                     </div>
                 </div>
                 
                 <!-- 3. Individual Effort Multiplier -->
-                <div class="mb-6">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">3. Individual Effort Multiplier (Raw Volume)</label>
-                    <p class="text-xs text-slate-500 mb-3">Analyst's total raw case count relative to peer group.</p>
-                    <div class="grid grid-cols-1 gap-3">
-                        <div class="relative">
-                            <select id="individualEffortInput" onchange="calculate();"
-                                class="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
-                                <option value="1.0">Top Volume: Top 20% of peers (+1.0)</option>
-                                <option value="0" selected>Standard Volume: Mid 60% of peers (0.0)</option>
-                                <option value="-1.0">Low Volume: Bottom 20% of peers (-1.0)</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
-                            </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">3. Individual Effort Multiplier</label>
+                    <p class="text-xs text-slate-500 mb-2" id="effortDesc">Analyst's total raw case count relative to peer group.</p>
+                    <div class="relative">
+                        <select id="individualEffortInput" onchange="calculate();"
+                            class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-sm appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
+                            <option value="1.0">Top Volume: Top 20% of peers (+1.0)</option>
+                            <option value="0" selected>Standard Volume: Mid 60% of peers (0.0)</option>
+                            <option value="-1.0">Low Volume: Bottom 20% of peers (-1.0)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
                         </div>
                     </div>
                 </div>
 
                 <!-- Bonus Chance Checkbox (Conditional) -->
-                <div id="bonusSection" class="hidden mt-6 bg-amber-50 border border-amber-200 p-4 rounded-lg animate-fade-in">
-                    <div class="flex items-start">
-                        <div class="bg-amber-100 p-2 rounded-full mr-3 text-amber-600">
-                            <i class="fa-solid fa-star"></i>
+                <div id="bonusSection" class="hidden mt-4 bg-amber-50 border border-amber-200 p-3 rounded-lg animate-fade-in">
+                    <div class="flex items-center">
+                        <div class="bg-amber-100 p-1.5 rounded-full mr-3 text-amber-600">
+                            <i class="fa-solid fa-star text-xs"></i>
                         </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-amber-900">Bonus Chance Eligibility</h3>
-                            <p class="text-xs text-amber-800 mb-2">QA is between 85.0% and 89.9%. Did the employee pass the blind "Bonus Case" review with 100%?</p>
-                            <label class="flex items-center space-x-2 cursor-pointer mt-2">
-                                <input type="checkbox" id="bonusCheck" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
-                                <span class="text-sm font-bold text-amber-900">Yes, Bonus Case Passed (100%)</span>
+                        <div class="flex-1">
+                            <h3 class="text-xs font-bold text-amber-900">Bonus Eligibility (QA 85-89.9%)</h3>
+                            <label class="flex items-center space-x-2 cursor-pointer mt-1">
+                                <input type="checkbox" id="bonusCheck" class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                                <span class="text-xs font-bold text-amber-900">Bonus Case Passed (100%)</span>
                             </label>
                         </div>
                     </div>
@@ -123,41 +194,44 @@
 
             <!-- Result Section -->
             <div class="lg:col-span-1">
-                <div class="bg-indigo-900 text-white rounded-xl shadow-lg p-6 h-full flex flex-col justify-between relative overflow-hidden ring-1 ring-white/10">
+                <div class="bg-indigo-900 text-white rounded-xl shadow-lg p-6 h-full flex flex-col justify-between relative overflow-hidden ring-1 ring-white/10 min-h-[300px]">
                     
                     <!-- Background blobs -->
                     <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
                     <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-purple-600 rounded-full blur-3xl opacity-20"></div>
 
-                    <div class="relative z-10">
-                        <h3 class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Final Hawkvibes Score</h3>
-                        <div class="flex items-baseline">
+                    <div class="relative z-10 text-center lg:text-left">
+                        <h3 class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Final Score</h3>
+                        <div class="flex items-baseline justify-center lg:justify-start">
                             <span id="scoreDisplay" class="text-7xl font-bold tracking-tight">0.0</span>
                             <span class="text-2xl text-indigo-300 font-light opacity-60">/10</span>
                         </div>
                         
-                        <div id="badgeContainer" class="mt-4 flex flex-wrap gap-2">
+                        <div id="badgeContainer" class="mt-4 flex flex-wrap justify-center lg:justify-start gap-2">
                             <!-- Badges injected by JS -->
                         </div>
                         
+                        <div id="workflowBadge" class="mt-4 p-1.5 bg-indigo-800/50 rounded text-[10px] text-indigo-200 border border-indigo-700/50 inline-block">
+                            Mode: KYC
+                        </div>
                     </div>
 
-                    <div class="relative z-10 mt-8 border-t border-indigo-700/50 pt-6">
-                        <h4 class="text-xs font-bold text-indigo-300 uppercase mb-3 tracking-wider">Calculation Breakdown</h4>
-                        <ul class="space-y-3 text-sm text-indigo-100/90" id="logicList">
+                    <div class="relative z-10 mt-6 border-t border-indigo-700/50 pt-4">
+                        <h4 class="text-[10px] font-bold text-indigo-300 uppercase mb-2 tracking-wider">Breakdown</h4>
+                        <ul class="space-y-2 text-xs text-indigo-100/90" id="logicList">
                             <!-- Logic steps injected by JS -->
                         </ul>
                     </div>
 
                     <!-- Unicorn Animation Container -->
                     <div id="unicornAnim" class="hidden absolute inset-0 bg-indigo-900/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
-                        <div class="animate-bounce mb-6">
-                            <i class="fa-solid fa-horse-head text-6xl text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"></i>
+                        <div class="animate-bounce mb-4">
+                            <i class="fa-solid fa-horse-head text-5xl text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"></i>
                         </div>
-                        <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">UNICORN STATUS!</h2>
-                        <p class="text-indigo-200 mb-8">Perfect 10.0 Achieved.<br>Excellence in Quality, Speed & Efficiency.</p>
-                        <button onclick="closeUnicorn()" class="px-6 py-3 bg-white text-indigo-900 rounded-full text-sm font-bold hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                            Close Celebration
+                        <h2 class="text-2xl font-bold text-white mb-1 tracking-tight">UNICORN!</h2>
+                        <p class="text-indigo-200 text-sm mb-6">Perfect 10.0 Achieved.</p>
+                        <button onclick="closeUnicorn()" class="px-5 py-2 bg-white text-indigo-900 rounded-full text-xs font-bold hover:bg-indigo-50 transition-all shadow-lg">
+                            Close
                         </button>
                     </div>
                 </div>
@@ -167,10 +241,22 @@
     </div>
 
     <script>
+        // State
+        let currentWorkflow = 'kyc';
+
         // DOM Elements
+        const tabKyc = document.getElementById('tab-kyc');
+        const tabMonitoring = document.getElementById('tab-monitoring');
+        const kycTeamInput = document.getElementById('kycTeamInput');
+        const monitoringTeamInput = document.getElementById('monitoringTeamInput');
+        const inputsTitle = document.getElementById('inputsTitle');
+        const effortDesc = document.getElementById('effortDesc');
+        const workflowBadge = document.getElementById('workflowBadge');
+        const monitoringTeamResult = document.getElementById('monitoringTeamResult');
+
         const qaInput = document.getElementById('qaInput');
         const qaNumber = document.getElementById('qaNumber');
-        const teamTatInput = document.getElementById('teamTatInput');
+        const teamTatInput = document.getElementById('teamTatInput'); // KYC
         const individualEffortInput = document.getElementById('individualEffortInput');
         const bonusSection = document.getElementById('bonusSection');
         const bonusCheck = document.getElementById('bonusCheck');
@@ -179,6 +265,41 @@
         const badgeContainer = document.getElementById('badgeContainer');
         const unicornAnim = document.getElementById('unicornAnim');
         
+        // --- Workflow Switching ---
+        function switchWorkflow(mode) {
+            currentWorkflow = mode;
+            
+            if (mode === 'kyc') {
+                // Style Tabs
+                tabKyc.className = "px-5 py-2 rounded-md text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm";
+                tabMonitoring.className = "px-5 py-2 rounded-md text-sm font-bold transition-all text-slate-500 hover:bg-slate-50";
+                
+                // Show/Hide Inputs
+                kycTeamInput.classList.remove('hidden');
+                monitoringTeamInput.classList.add('hidden');
+                
+                // Update Labels
+                inputsTitle.innerHTML = '<i class="fa-solid fa-sliders mr-2"></i> KYC Inputs';
+                effortDesc.innerText = "Analyst's total raw case count relative to peer group.";
+                workflowBadge.innerText = "Mode: KYC/Onboarding";
+            } else {
+                // Style Tabs
+                tabMonitoring.className = "px-5 py-2 rounded-md text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm";
+                tabKyc.className = "px-5 py-2 rounded-md text-sm font-bold transition-all text-slate-500 hover:bg-slate-50";
+                
+                // Show/Hide Inputs
+                kycTeamInput.classList.add('hidden');
+                monitoringTeamInput.classList.remove('hidden');
+                
+                // Update Labels
+                inputsTitle.innerHTML = '<i class="fa-solid fa-sliders mr-2"></i> Monitoring Inputs';
+                effortDesc.innerText = "Analyst's total raw alert count relative to peer group.";
+                workflowBadge.innerText = "Mode: Monitoring/Alerts";
+            }
+            calculate();
+        }
+
+
         // --- Event Listeners ---
         qaInput.addEventListener('input', () => {
             qaNumber.value = qaInput.value;
@@ -191,147 +312,137 @@
             qaInput.value = val;
             calculate();
         });
-        teamTatInput.addEventListener('change', calculate);
-        individualEffortInput.addEventListener('change', calculate);
         bonusCheck.addEventListener('change', calculate);
+        // Note: Other input listeners (onchange) are inline in HTML for simplicity
 
         // --- Core Calculation ---
         function calculate() {
-            // Inputs
+            // 1. Get QA
             let inputQA = parseFloat(qaNumber.value);
-            const teamTatMult = parseFloat(teamTatInput.value);
-            const effortMult = parseFloat(individualEffortInput.value);
-            
-            // Variables for Calculation
-            let effectiveQA = inputQA; // effectiveQA might change if bonus is applied
-            let baseScore = 0;
-            let maxCap = 0;
+            let effectiveQA = inputQA;
             let bonusApplied = false;
-            let reasons = [];
-            let bracketName = "";
-            let bracketColor = "";
 
-            // 1. Bonus Chance Logic (Check Eligibility 85% - 89.9%)
-            // "Eligibility: Employees sitting between 85.0% and 89.9%"
+            // 2. Bonus Chance Logic (85-89.9%)
             if (inputQA >= 85.0 && inputQA < 90.0) {
                 bonusSection.classList.remove('hidden');
                 if (bonusCheck.checked) {
-                    // "If the case is 100% perfect... unlocking higher Hawkvibes scores (moving the cap from 6.0 to 8.0)."
-                    // This implies they move to the 'Meets Expectations' bracket logic.
-                    // The standard Base for 80-89.9 is 5.0. The standard Base for 90-94.9 is 7.0.
-                    // Effectively, we treat them as if they have 90% QA for calculation purposes.
                     effectiveQA = 90.0;
                     bonusApplied = true;
                 }
             } else {
                 bonusSection.classList.add('hidden');
-                bonusCheck.checked = false; // Reset if out of range
+                bonusCheck.checked = false;
             }
 
-            // 2. Determine Base Score & Cap based on Effective QA
+            // 3. Determine Base Score & Cap
+            let baseScore = 0;
+            let maxCap = 0;
+            let bracketName = "";
+            let bracketColor = "";
+            let reasons = [];
+
             if (effectiveQA < 80.0) {
-                // < 80%: Critical
-                baseScore = 4.0;
-                maxCap = 4.0;
-                bracketName = "Critical";
-                bracketColor = "bg-red-500";
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-red-300"></i> Base Score: ${baseScore.toFixed(1)} (Critical Zone)</li>`);
+                baseScore = 4.0; maxCap = 4.0; bracketName = "Critical"; bracketColor = "bg-red-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-red-300"></i> Base: ${baseScore} (Critical)</li>`);
             } else if (effectiveQA < 90.0) {
-                // 80% - 89.9%: Below Expectation
-                baseScore = 5.0; // Derived from Example F (5.0 - 1.0 = 4.0)
-                maxCap = 6.0;
-                bracketName = "Below Expectation";
-                bracketColor = "bg-orange-500";
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-orange-300"></i> Base Score: ${baseScore.toFixed(1)} (Below Expectation)</li>`);
+                baseScore = 5.0; maxCap = 6.0; bracketName = "Below Exp."; bracketColor = "bg-orange-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-orange-300"></i> Base: ${baseScore} (Below Exp.)</li>`);
             } else if (effectiveQA < 95.0) {
-                // 90% - 94.9%: Meets Expectation
-                baseScore = 7.0; // Standard Meets Base
-                maxCap = 8.0;
-                bracketName = "Meets Expectation";
-                bracketColor = "bg-blue-500";
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-300"></i> Base Score: ${baseScore.toFixed(1)} (Meets Expectation)</li>`);
+                baseScore = 7.0; maxCap = 8.0; bracketName = "Meets Exp."; bracketColor = "bg-blue-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-300"></i> Base: ${baseScore} (Meets Exp.)</li>`);
             } else if (effectiveQA < 100.0) {
-                // 95% - 99.9%: Exceeds Expectation
-                baseScore = 8.5; // Derived from Example A (8.5 + 0.5 + 1.0 = 10 -> Cap 9)
-                maxCap = 9.0;
-                bracketName = "Exceeds Expectation";
-                bracketColor = "bg-indigo-500";
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check-double mt-1 mr-2 text-green-300"></i> Base Score: ${baseScore.toFixed(1)} (Exceeds Expectation)</li>`);
+                baseScore = 8.5; maxCap = 9.0; bracketName = "Exceeds Exp."; bracketColor = "bg-indigo-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check-double mt-1 mr-2 text-green-300"></i> Base: ${baseScore} (Exceeds Exp.)</li>`);
             } else {
-                // 100%: Unicorn Potential
-                baseScore = 9.0; // Derived from Example C (9.0 + 0 + 0 = 9.0)
-                maxCap = 10.0;
-                bracketName = "Unicorn Potential";
-                bracketColor = "bg-purple-500";
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-crown mt-1 mr-2 text-yellow-300"></i> Base Score: ${baseScore.toFixed(1)} (Perfect Quality)</li>`);
+                baseScore = 9.0; maxCap = 10.0; bracketName = "Unicorn Pot."; bracketColor = "bg-purple-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-crown mt-1 mr-2 text-yellow-300"></i> Base: ${baseScore} (Perfect)</li>`);
             }
 
-            // 3. Apply Multipliers
+            // 4. Calculate Multipliers
             let currentScore = baseScore;
+            let teamMult = 0;
+            let effortMult = parseFloat(individualEffortInput.value);
 
-            // Team TAT
-            currentScore += teamTatMult;
-            let tatText = teamTatMult === 0.5 ? "+0.5 (Excellent TAT)" : (teamTatMult === 0 ? "0.0 (Target TAT)" : "-1.0 (Poor TAT)");
-            reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-indigo-300"></i> Team TAT: ${tatText}</li>`);
-
-            // Individual Effort
-            currentScore += effortMult;
-            let volText = effortMult === 1.0 ? "+1.0 (Top 20% Volume)" : (effortMult === 0 ? "0.0 (Standard Volume)" : "-1.0 (Bottom 20% Volume)");
-            reasons.push(`<li class="flex items-start"><i class="fa-solid fa-fire-extinguisher mt-1 mr-2 text-indigo-300"></i> Individual Volume: ${volText}</li>`);
-
-            // 4. Apply Caps & Golden Rules
+            if (currentWorkflow === 'kyc') {
+                // KYC Team Logic
+                teamMult = parseFloat(teamTatInput.value);
+                let tText = teamMult === 0.5 ? "+0.5 (Exc.)" : (teamMult === 0 ? "0.0 (Tgt)" : "-1.0 (Poor)");
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-indigo-300"></i> Team TAT: ${tText}</li>`);
             
-            // A. The Quality Gate Cap
-            // If the calculated score exceeds the cap for the QA bracket, reduce it.
+            } else {
+                // Monitoring Team Logic: 2 SLAs
+                const sla1 = document.querySelector('input[name="sla1"]:checked').value;
+                const sla2 = document.querySelector('input[name="sla2"]:checked').value;
+                
+                if (sla1 === 'met' && sla2 === 'met') {
+                    teamMult = 0.5;
+                    monitoringTeamResult.innerText = "Multiplier: +0.5 (Exc)";
+                    monitoringTeamResult.className = "text-right text-xs font-bold text-green-600";
+                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-green-300"></i> Team: Met BOTH (+0.5)</li>`);
+                } else if (sla1 === 'missed' && sla2 === 'missed') {
+                    teamMult = -1.0;
+                    monitoringTeamResult.innerText = "Multiplier: -1.0 (Poor)";
+                    monitoringTeamResult.className = "text-right text-xs font-bold text-red-600";
+                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-red-300"></i> Team: Missed BOTH (-1.0)</li>`);
+                } else {
+                    teamMult = 0.0;
+                    monitoringTeamResult.innerText = "Multiplier: 0.0 (Tgt)";
+                    monitoringTeamResult.className = "text-right text-xs font-bold text-indigo-600";
+                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-indigo-300"></i> Team: Met ONE (0.0)</li>`);
+                }
+            }
+
+            // Apply Team Mult
+            currentScore += teamMult;
+
+            // Apply Effort Mult
+            currentScore += effortMult;
+            let eText = effortMult === 1.0 ? "+1.0 (Top)" : (effortMult === 0 ? "0.0 (Std)" : "-1.0 (Low)");
+            reasons.push(`<li class="flex items-start"><i class="fa-solid fa-fire-extinguisher mt-1 mr-2 text-indigo-300"></i> Effort: ${eText}</li>`);
+
+            // 5. Apply Caps
             if (currentScore > maxCap) {
                 currentScore = maxCap;
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-lock mt-1 mr-2 text-red-400"></i> Quality Gate: Capped at ${maxCap.toFixed(1)} due to QA score.</li>`);
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-lock mt-1 mr-2 text-red-400"></i> Capped at ${maxCap.toFixed(1)} by QA.</li>`);
             }
 
-            // B. The Quality Floor (Incentive)
-            // "If 100% QA score ... and meets at least Standard Volume ... guaranteed 9.0."
-            // Standard Volume is >= 0.0 multiplier.
+            // Quality Floor (100% QA + >= Std Effort -> Min 9.0)
             if (inputQA === 100.0 && effortMult >= 0.0) {
                 if (currentScore < 9.0) {
                     currentScore = 9.0;
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-shield-halved mt-1 mr-2 text-blue-300"></i> Quality Floor: 100% QA guarantees 9.0.</li>`);
+                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-shield-halved mt-1 mr-2 text-blue-300"></i> Floor: 100% QA = Min 9.0</li>`);
                 }
             }
 
-            // C. Unicorn Logic
+            // Unicorn Check
             let isUnicorn = false;
-            // 10.0 Requires: 100% QA AND Max Multipliers (+1.5 total)
             if (currentScore === 10.0) {
-                if (inputQA === 100.0 && (teamTatMult + effortMult) === 1.5) {
+                 if (inputQA === 100.0 && (teamMult + effortMult) === 1.5) {
                     isUnicorn = true;
-                } else {
-                    // If score is 10 but conditions aren't met (e.g. math worked out but rules don't allow), cap at 9.5?
-                    // Actually, based on math: Base 9.0. To get 10, you NEED +1.5 (9.0+1.5 = 10.5 capped at 10).
-                    // If you have Base 9.0 and +0.5 and +0.0 = 9.5. 
-                    // So purely mathematically, 10.0 implies max multipliers were used.
-                    // Just double check QA is 100.
-                    if (inputQA < 100.0) {
-                        currentScore = 9.0; // Should be caught by maxCap earlier, but safe guard.
-                    } else {
-                        isUnicorn = true;
-                    }
-                }
+                 } else {
+                     if (inputQA < 100.0) {
+                         // capped by maxCap
+                     } else if ((teamMult + effortMult) < 1.5) {
+                         currentScore = 9.5;
+                         reasons.push(`<li class="flex items-start"><i class="fa-solid fa-circle-info mt-1 mr-2 text-indigo-300"></i> 10.0 requires Max Mults.</li>`);
+                     } else {
+                         isUnicorn = true;
+                     }
+                 }
             }
 
-            // Final Rounding & Constraints
+            // Rounding
             currentScore = Math.max(1.0, Math.min(10.0, currentScore));
-            
-            // 5. Update UI
+
+            // Update DOM
             scoreDisplay.innerText = currentScore.toFixed(1);
             logicList.innerHTML = reasons.join('');
             
-            // Badges
             badgeContainer.innerHTML = `
                 <span class="${bracketColor} text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">${bracketName}</span>
             `;
-
             if (bonusApplied) {
-                 badgeContainer.innerHTML += `<span class="bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> Bonus Applied</span>`;
+                 badgeContainer.innerHTML += `<span class="bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> Bonus</span>`;
             }
 
             if (isUnicorn) {
@@ -346,8 +457,7 @@
         }
 
         // Init
-        calculate();
-
+        switchWorkflow('kyc'); // Default
     </script>
 </body>
 </html>
