@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hawkvibes KYC Performance Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif;
+            min-height: auto; 
+            padding: 20px;
+        }
+        /* Custom range slider styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+        }
+        input[type=range]:focus {
+            outline: none; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col items-center">
+
+    <div class="w-full max-w-4xl">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">Hawkvibes KYC Calculator</h1>
+            <p class="text-slate-500">Compliance Performance Framework (KYC/Onboarding)</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Input Section -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6 border border-slate-200">
+                <h2 class="text-xl font-semibold mb-6 flex items-center text-indigo-700">
+                    <i class="fa-solid fa-sliders mr-2"></i> Performance Inputs
+                </h2>
+
+                <!-- 1. QA Score Input -->
+                <div class="mb-8 border-b pb-6 border-slate-200">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">1. Quarterly QA Score (%)</label>
+                    <div class="flex items-center space-x-4">
+                        <input type="range" id="qaInput" min="0" max="100" value="90.0" step="0.1" 
+                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                        <div class="w-24">
+                            <input type="number" id="qaNumber" value="90.0" min="0" max="100" step="0.1"
+                                class="w-full p-2 text-center border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-indigo-700 text-lg">
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400 mt-2 font-medium">
+                        <span class="text-red-400">Critical (<80%)</span>
+                        <span class="text-orange-400">Below (80-89.9%)</span>
+                        <span class="text-blue-400">Meets (90%)</span>
+                        <span class="text-indigo-400">Exceeds (95%)</span>
+                        <span class="text-purple-500">Unicorn (100%)</span>
+                    </div>
+                </div>
+
+                <!-- 2. Team TAT Multiplier -->
+                <div class="mb-8 border-b pb-6 border-slate-200">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">2. Team TAT Multiplier (Collective Efficiency)</label>
+                    <p class="text-xs text-slate-500 mb-3">Based on Team's % of cases reviewed within 1 business day.</p>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="relative">
+                            <select id="teamTatInput" onchange="calculate();"
+                                class="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
+                                <option value="0.5">Excellent TAT: ≥ 85% Compliance (+0.5)</option>
+                                <option value="0" selected>Target TAT: 80% to 84.9% Compliance (0.0)</option>
+                                <option value="-1.0">Poor TAT: < 80% Compliance (-1.0)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 3. Individual Effort Multiplier -->
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">3. Individual Effort Multiplier (Raw Volume)</label>
+                    <p class="text-xs text-slate-500 mb-3">Analyst's total raw case count relative to peer group.</p>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="relative">
+                            <select id="individualEffortInput" onchange="calculate();"
+                                class="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
+                                <option value="1.0">Top Volume: Top 20% of peers (+1.0)</option>
+                                <option value="0" selected>Standard Volume: Mid 60% of peers (0.0)</option>
+                                <option value="-1.0">Low Volume: Bottom 20% of peers (-1.0)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bonus Chance Checkbox (Conditional) -->
+                <div id="bonusSection" class="hidden mt-6 bg-amber-50 border border-amber-200 p-4 rounded-lg animate-fade-in">
+                    <div class="flex items-start">
+                        <div class="bg-amber-100 p-2 rounded-full mr-3 text-amber-600">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-amber-900">Bonus Chance Eligibility</h3>
+                            <p class="text-xs text-amber-800 mb-2">QA is between 85.0% and 89.9%. Did the employee pass the blind "Bonus Case" review with 100%?</p>
+                            <label class="flex items-center space-x-2 cursor-pointer mt-2">
+                                <input type="checkbox" id="bonusCheck" class="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
+                                <span class="text-sm font-bold text-amber-900">Yes, Bonus Case Passed (100%)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Result Section -->
+            <div class="lg:col-span-1">
+                <div class="bg-indigo-900 text-white rounded-xl shadow-lg p-6 h-full flex flex-col justify-between relative overflow-hidden ring-1 ring-white/10">
+                    
+                    <!-- Background blobs -->
+                    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
+                    <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-purple-600 rounded-full blur-3xl opacity-20"></div>
+
+                    <div class="relative z-10">
+                        <h3 class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Final Hawkvibes Score</h3>
+                        <div class="flex items-baseline">
+                            <span id="scoreDisplay" class="text-7xl font-bold tracking-tight">0.0</span>
+                            <span class="text-2xl text-indigo-300 font-light opacity-60">/10</span>
+                        </div>
+                        
+                        <div id="badgeContainer" class="mt-4 flex flex-wrap gap-2">
+                            <!-- Badges injected by JS -->
+                        </div>
+                        
+                    </div>
+
+                    <div class="relative z-10 mt-8 border-t border-indigo-700/50 pt-6">
+                        <h4 class="text-xs font-bold text-indigo-300 uppercase mb-3 tracking-wider">Calculation Breakdown</h4>
+                        <ul class="space-y-3 text-sm text-indigo-100/90" id="logicList">
+                            <!-- Logic steps injected by JS -->
+                        </ul>
+                    </div>
+
+                    <!-- Unicorn Animation Container -->
+                    <div id="unicornAnim" class="hidden absolute inset-0 bg-indigo-900/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
+                        <div class="animate-bounce mb-6">
+                            <i class="fa-solid fa-horse-head text-6xl text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">UNICORN STATUS!</h2>
+                        <p class="text-indigo-200 mb-8">Perfect 10.0 Achieved.<br>Excellence in Quality, Speed & Efficiency.</p>
+                        <button onclick="closeUnicorn()" class="px-6 py-3 bg-white text-indigo-900 rounded-full text-sm font-bold hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            Close Celebration
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const qaInput = document.getElementById('qaInput');
+        const qaNumber = document.getElementById('qaNumber');
+        const teamTatInput = document.getElementById('teamTatInput');
+        const individualEffortInput = document.getElementById('individualEffortInput');
+        const bonusSection = document.getElementById('bonusSection');
+        const bonusCheck = document.getElementById('bonusCheck');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const logicList = document.getElementById('logicList');
+        const badgeContainer = document.getElementById('badgeContainer');
+        const unicornAnim = document.getElementById('unicornAnim');
+        
+        // --- Event Listeners ---
+        qaInput.addEventListener('input', () => {
+            qaNumber.value = qaInput.value;
+            calculate();
+        });
+        qaNumber.addEventListener('input', () => {
+            let val = parseFloat(qaNumber.value);
+            if(val > 100) val = 100;
+            if(val < 0) val = 0;
+            qaInput.value = val;
+            calculate();
+        });
+        teamTatInput.addEventListener('change', calculate);
+        individualEffortInput.addEventListener('change', calculate);
+        bonusCheck.addEventListener('change', calculate);
+
+        // --- Core Calculation ---
+        function calculate() {
+            // Inputs
+            let inputQA = parseFloat(qaNumber.value);
+            const teamTatMult = parseFloat(teamTatInput.value);
+            const effortMult = parseFloat(individualEffortInput.value);
+            
+            // Variables for Calculation
+            let effectiveQA = inputQA; // effectiveQA might change if bonus is applied
+            let baseScore = 0;
+            let maxCap = 0;
+            let bonusApplied = false;
+            let reasons = [];
+            let bracketName = "";
+            let bracketColor = "";
+
+            // 1. Bonus Chance Logic (Check Eligibility 85% - 89.9%)
+            // "Eligibility: Employees sitting between 85.0% and 89.9%"
+            if (inputQA >= 85.0 && inputQA < 90.0) {
+                bonusSection.classList.remove('hidden');
+                if (bonusCheck.checked) {
+                    // "If the case is 100% perfect... unlocking higher Hawkvibes scores (moving the cap from 6.0 to 8.0)."
+                    // This implies they move to the 'Meets Expectations' bracket logic.
+                    // The standard Base for 80-89.9 is 5.0. The standard Base for 90-94.9 is 7.0.
+                    // Effectively, we treat them as if they have 90% QA for calculation purposes.
+                    effectiveQA = 90.0;
+                    bonusApplied = true;
+                }
+            } else {
+                bonusSection.classList.add('hidden');
+                bonusCheck.checked = false; // Reset if out of range
+            }
+
+            // 2. Determine Base Score & Cap based on Effective QA
+            if (effectiveQA < 80.0) {
+                // < 80%: Critical
+                baseScore = 4.0;
+                maxCap = 4.0;
+                bracketName = "Critical";
+                bracketColor = "bg-red-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-red-300"></i> Base Score: ${baseScore.toFixed(1)} (Critical Zone)</li>`);
+            } else if (effectiveQA < 90.0) {
+                // 80% - 89.9%: Below Expectation
+                baseScore = 5.0; // Derived from Example F (5.0 - 1.0 = 4.0)
+                maxCap = 6.0;
+                bracketName = "Below Expectation";
+                bracketColor = "bg-orange-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-orange-300"></i> Base Score: ${baseScore.toFixed(1)} (Below Expectation)</li>`);
+            } else if (effectiveQA < 95.0) {
+                // 90% - 94.9%: Meets Expectation
+                baseScore = 7.0; // Standard Meets Base
+                maxCap = 8.0;
+                bracketName = "Meets Expectation";
+                bracketColor = "bg-blue-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-300"></i> Base Score: ${baseScore.toFixed(1)} (Meets Expectation)</li>`);
+            } else if (effectiveQA < 100.0) {
+                // 95% - 99.9%: Exceeds Expectation
+                baseScore = 8.5; // Derived from Example A (8.5 + 0.5 + 1.0 = 10 -> Cap 9)
+                maxCap = 9.0;
+                bracketName = "Exceeds Expectation";
+                bracketColor = "bg-indigo-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check-double mt-1 mr-2 text-green-300"></i> Base Score: ${baseScore.toFixed(1)} (Exceeds Expectation)</li>`);
+            } else {
+                // 100%: Unicorn Potential
+                baseScore = 9.0; // Derived from Example C (9.0 + 0 + 0 = 9.0)
+                maxCap = 10.0;
+                bracketName = "Unicorn Potential";
+                bracketColor = "bg-purple-500";
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-crown mt-1 mr-2 text-yellow-300"></i> Base Score: ${baseScore.toFixed(1)} (Perfect Quality)</li>`);
+            }
+
+            // 3. Apply Multipliers
+            let currentScore = baseScore;
+
+            // Team TAT
+            currentScore += teamTatMult;
+            let tatText = teamTatMult === 0.5 ? "+0.5 (Excellent TAT)" : (teamTatMult === 0 ? "0.0 (Target TAT)" : "-1.0 (Poor TAT)");
+            reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-indigo-300"></i> Team TAT: ${tatText}</li>`);
+
+            // Individual Effort
+            currentScore += effortMult;
+            let volText = effortMult === 1.0 ? "+1.0 (Top 20% Volume)" : (effortMult === 0 ? "0.0 (Standard Volume)" : "-1.0 (Bottom 20% Volume)");
+            reasons.push(`<li class="flex items-start"><i class="fa-solid fa-fire-extinguisher mt-1 mr-2 text-indigo-300"></i> Individual Volume: ${volText}</li>`);
+
+            // 4. Apply Caps & Golden Rules
+            
+            // A. The Quality Gate Cap
+            // If the calculated score exceeds the cap for the QA bracket, reduce it.
+            if (currentScore > maxCap) {
+                currentScore = maxCap;
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-lock mt-1 mr-2 text-red-400"></i> Quality Gate: Capped at ${maxCap.toFixed(1)} due to QA score.</li>`);
+            }
+
+            // B. The Quality Floor (Incentive)
+            // "If 100% QA score ... and meets at least Standard Volume ... guaranteed 9.0."
+            // Standard Volume is >= 0.0 multiplier.
+            if (inputQA === 100.0 && effortMult >= 0.0) {
+                if (currentScore < 9.0) {
+                    currentScore = 9.0;
+                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-shield-halved mt-1 mr-2 text-blue-300"></i> Quality Floor: 100% QA guarantees 9.0.</li>`);
+                }
+            }
+
+            // C. Unicorn Logic
+            let isUnicorn = false;
+            // 10.0 Requires: 100% QA AND Max Multipliers (+1.5 total)
+            if (currentScore === 10.0) {
+                if (inputQA === 100.0 && (teamTatMult + effortMult) === 1.5) {
+                    isUnicorn = true;
+                } else {
+                    // If score is 10 but conditions aren't met (e.g. math worked out but rules don't allow), cap at 9.5?
+                    // Actually, based on math: Base 9.0. To get 10, you NEED +1.5 (9.0+1.5 = 10.5 capped at 10).
+                    // If you have Base 9.0 and +0.5 and +0.0 = 9.5. 
+                    // So purely mathematically, 10.0 implies max multipliers were used.
+                    // Just double check QA is 100.
+                    if (inputQA < 100.0) {
+                        currentScore = 9.0; // Should be caught by maxCap earlier, but safe guard.
+                    } else {
+                        isUnicorn = true;
+                    }
+                }
+            }
+
+            // Final Rounding & Constraints
+            currentScore = Math.max(1.0, Math.min(10.0, currentScore));
+            
+            // 5. Update UI
+            scoreDisplay.innerText = currentScore.toFixed(1);
+            logicList.innerHTML = reasons.join('');
+            
+            // Badges
+            badgeContainer.innerHTML = `
+                <span class="${bracketColor} text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">${bracketName}</span>
+            `;
+
+            if (bonusApplied) {
+                 badgeContainer.innerHTML += `<span class="bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> Bonus Applied</span>`;
+            }
+
+            if (isUnicorn) {
+                unicornAnim.classList.remove('hidden');
+            } else {
+                unicornAnim.classList.add('hidden');
+            }
+        }
+
+        function closeUnicorn() {
+            unicornAnim.classList.add('hidden');
+        }
+
+        // Init
+        calculate();
+
+    </script>
+</body>
+</html>
