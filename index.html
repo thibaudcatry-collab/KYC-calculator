@@ -12,7 +12,6 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc; /* bg-slate-50 */
             color: #1e293b; /* text-slate-800 */
-            /* Ensure no scrollbars on body if iframe fits content */
             margin: 0;
             padding: 20px;
         }
@@ -82,7 +81,7 @@
                         <span class="text-orange-400">Below</span>
                         <span class="text-blue-400">Meets</span>
                         <span class="text-indigo-400">Exceeds</span>
-                        <span class="text-purple-500">Unicorn</span>
+                        <span class="text-purple-500">Best in Class</span>
                     </div>
                 </div>
 
@@ -90,15 +89,15 @@
                 <div class="mb-6 border-b border-slate-100 pb-4">
                     <label class="block text-sm font-bold text-slate-700 mb-2">2. Team Collective Measure</label>
                     
-                    <!-- KYC Specific Input -->
+                    <!-- KYC Specific Input (UPDATED THRESHOLDS) -->
                     <div id="kycTeamInput" class="fade-in">
                         <p class="text-xs text-slate-500 mb-2">Metric: % of cases reviewed within 1 business day.</p>
                         <div class="relative">
                             <select id="teamTatInput" onchange="calculate();"
                                 class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-sm appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
-                                <option value="0.5">Excellent: ≥ 85% Compliance (+0.5)</option>
-                                <option value="0" selected>Target: 80% to 84.9% Compliance (0.0)</option>
-                                <option value="-1.0">Poor: < 80% Compliance (-1.0)</option>
+                                <option value="0.5">Excellent: ≥ 80% Compliance (+0.5)</option>
+                                <option value="0" selected>Target: 70% to 79.9% Compliance (0.0)</option>
+                                <option value="-1.0">Poor: < 70% Compliance (-1.0)</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                                 <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -203,7 +202,7 @@
                     <div class="relative z-10 text-center lg:text-left">
                         <h3 class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Final Score</h3>
                         <div class="flex items-baseline justify-center lg:justify-start">
-                            <span id="scoreDisplay" class="text-7xl font-bold tracking-tight">0.0</span>
+                            <span id="scoreDisplay" class="text-7xl font-bold tracking-tight">0</span>
                             <span class="text-2xl text-indigo-300 font-light opacity-60">/10</span>
                         </div>
                         
@@ -223,13 +222,13 @@
                         </ul>
                     </div>
 
-                    <!-- Unicorn Animation Container -->
+                    <!-- Best in Class Animation Container -->
                     <div id="unicornAnim" class="hidden absolute inset-0 bg-indigo-900/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
                         <div class="animate-bounce mb-4">
-                            <i class="fa-solid fa-horse-head text-5xl text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"></i>
+                            <i class="fa-solid fa-trophy text-5xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500"></i>
                         </div>
-                        <h2 class="text-2xl font-bold text-white mb-1 tracking-tight">UNICORN!</h2>
-                        <p class="text-indigo-200 text-sm mb-6">Perfect 10.0 Achieved.</p>
+                        <h2 class="text-2xl font-bold text-white mb-1 tracking-tight">BEST IN CLASS!</h2>
+                        <p class="text-indigo-200 text-sm mb-6">Perfect 10 Achieved.</p>
                         <button onclick="closeUnicorn()" class="px-5 py-2 bg-white text-indigo-900 rounded-full text-xs font-bold hover:bg-indigo-50 transition-all shadow-lg">
                             Close
                         </button>
@@ -313,7 +312,6 @@
             calculate();
         });
         bonusCheck.addEventListener('change', calculate);
-        // Note: Other input listeners (onchange) are inline in HTML for simplicity
 
         // --- Core Calculation ---
         function calculate() {
@@ -354,7 +352,7 @@
                 baseScore = 8.5; maxCap = 9.0; bracketName = "Exceeds Exp."; bracketColor = "bg-indigo-500";
                 reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check-double mt-1 mr-2 text-green-300"></i> Base: ${baseScore} (Exceeds Exp.)</li>`);
             } else {
-                baseScore = 9.0; maxCap = 10.0; bracketName = "Unicorn Pot."; bracketColor = "bg-purple-500";
+                baseScore = 9.0; maxCap = 10.0; bracketName = "Best in Class"; bracketColor = "bg-purple-500";
                 reasons.push(`<li class="flex items-start"><i class="fa-solid fa-crown mt-1 mr-2 text-yellow-300"></i> Base: ${baseScore} (Perfect)</li>`);
             }
 
@@ -414,28 +412,46 @@
                 }
             }
 
-            // Unicorn Check
-            let isUnicorn = false;
-            if (currentScore === 10.0) {
+            // Best in Class Check (100% QA + Max Mults)
+            let isBestInClass = false;
+            // 10 requires: 100% QA AND Max Multipliers (+1.5 total) -> 9.0 + 1.5 = 10.5 -> 10.0
+            // If they have 100% QA but only +1.0 mults -> 9.0 + 1.0 = 10.0.
+            // Framework says: "A score of 10 is reserved... must trigger: QA 100%, Multipliers +1.5".
+            // So we must enforce that strict logic.
+            
+            if (Math.round(currentScore) === 10) {
                  if (inputQA === 100.0 && (teamMult + effortMult) === 1.5) {
-                    isUnicorn = true;
+                    isBestInClass = true;
                  } else {
-                     if (inputQA < 100.0) {
-                         // capped by maxCap
-                     } else if ((teamMult + effortMult) < 1.5) {
-                         currentScore = 9.5;
-                         reasons.push(`<li class="flex items-start"><i class="fa-solid fa-circle-info mt-1 mr-2 text-indigo-300"></i> 10.0 requires Max Mults.</li>`);
+                     // Even if it rounds to 10, if they don't have perfect stats, we cap at 9
+                     // Wait, user asked for rounding. 
+                     // If result is 9.5 -> rounds to 10. 
+                     // But framework says 10 is reserved.
+                     // I will enforce the cap at 9 if criteria not met, then round.
+                     if (inputQA < 100.0 || (teamMult + effortMult) < 1.5) {
+                         currentScore = Math.min(currentScore, 9.4); // Force rounding down to 9
+                         reasons.push(`<li class="flex items-start"><i class="fa-solid fa-circle-info mt-1 mr-2 text-indigo-300"></i> 10 requires Max Multipliers.</li>`);
                      } else {
-                         isUnicorn = true;
+                         isBestInClass = true;
                      }
                  }
             }
 
-            // Rounding
+            // 6. Rounding (Final Step)
+            // Ensure bounds first
             currentScore = Math.max(1.0, Math.min(10.0, currentScore));
-
+            
+            // Apply Rounding
+            let finalRoundedScore = Math.round(currentScore);
+            
             // Update DOM
-            scoreDisplay.innerText = currentScore.toFixed(1);
+            scoreDisplay.innerText = finalRoundedScore; // No decimals
+            
+            // Add note about rounding
+            if (currentScore !== finalRoundedScore) {
+                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-calculator mt-1 mr-2 text-slate-400"></i> Value ${currentScore.toFixed(1)} rounded to ${finalRoundedScore}.</li>`);
+            }
+
             logicList.innerHTML = reasons.join('');
             
             badgeContainer.innerHTML = `
@@ -445,7 +461,7 @@
                  badgeContainer.innerHTML += `<span class="bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> Bonus</span>`;
             }
 
-            if (isUnicorn) {
+            if (isBestInClass) {
                 unicornAnim.classList.remove('hidden');
             } else {
                 unicornAnim.classList.add('hidden');
