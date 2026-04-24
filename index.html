@@ -1,497 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hawkvibes Performance Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { 
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
-            margin: 0;
-            padding: 20px;
-        }
-        input[type=range] { -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; }
-        input[type=range]:focus { outline: none; }
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hawkvibes Performance Calculator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+  :root {
+    --ph-black:   #000A0B;
+    --ph-dark:    #0D1412;
+    --ph-card:    #111A18;
+    --ph-surface: #162320;
+    --ph-border:  #1E2E2A;
+    --ph-border2: #243530;
+    --ph-green:   #1BF08A;
+    --ph-green2:  #0FBF6E;
+    --ph-muted:   #4A6B63;
+    --ph-label:   #7A9B93;
+    --ph-text:    #E8F5F1;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--ph-black);
+    color: var(--ph-text);
+    margin: 0;
+    padding: 24px 20px 60px;
+  }
+
+  input[type=range] { -webkit-appearance: none; background: transparent; }
+  input[type=range]:focus { outline: none; }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 4px; background: var(--ph-border2);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    background: var(--ph-green); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 0 10px rgba(27,240,138,0.45); margin-top: -7px;
+  }
+
+  .ph-card { background: var(--ph-card); border: 1px solid var(--ph-border); border-radius: 14px; }
+
+  .score-panel {
+    background: var(--ph-black);
+    border: 1px solid var(--ph-green2);
+    border-radius: 14px;
+    box-shadow: 0 0 40px rgba(27,240,138,0.07);
+  }
+
+  .ratio-box {
+    background: var(--ph-surface); border: 1px solid var(--ph-border);
+    border-radius: 10px; transition: border-color 0.2s, box-shadow 0.2s;
+    text-align: center; padding: 12px 8px;
+  }
+  .ratio-box.good { border-color: var(--ph-green); box-shadow: 0 0 12px rgba(27,240,138,0.12); }
+  .ratio-box.bad  { border-color: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,0.10); }
+  .ratio-box input[type=number] {
+    background: transparent; border: none; outline: none;
+    color: var(--ph-text); font-size: 22px; font-weight: 700;
+    text-align: center; width: 100%;
+  }
+  .ratio-box input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .sla-radio { display: none; }
+  .sla-pill {
+    display: block; text-align: center; padding: 7px 0;
+    border-radius: 7px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--ph-border); color: var(--ph-label);
+    background: var(--ph-surface); cursor: pointer; transition: all 0.15s;
+  }
+  .sla-radio:checked + .sla-pill.met    { background: rgba(27,240,138,0.1); border-color: var(--ph-green); color: var(--ph-green); }
+  .sla-radio:checked + .sla-pill.missed { background: rgba(239,68,68,0.1); border-color: #ef4444; color: #ef4444; }
+
+  .tab-active   { background: var(--ph-green) !important; color: #000A0B !important; font-weight: 700 !important; box-shadow: 0 0 20px rgba(27,240,138,0.2); }
+  .tab-inactive { color: var(--ph-label) !important; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .b-red    { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+  .b-orange { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25); }
+  .b-green  { background: rgba(27,240,138,0.1); color: var(--ph-green); border: 1px solid rgba(27,240,138,0.25); }
+  .b-blue   { background: rgba(79,143,255,0.1); color: #4f8fff; border: 1px solid rgba(79,143,255,0.25); }
+  .b-gold   { background: rgba(245,200,66,0.1); color: #f5c842; border: 1px solid rgba(245,200,66,0.25); }
+  .b-purple { background: rgba(167,139,250,0.1); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+
+  .sc-critical { color: #ef4444; }
+  .sc-below    { color: #f59e0b; }
+  .sc-meets    { color: #4f8fff; }
+  .sc-exceeds  { color: #a78bfa; }
+  .sc-best     { color: var(--ph-green); }
+
+  .ref-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
+  .ref-table th { text-align: left; padding: 5px 8px; color: var(--ph-muted); border-bottom: 1px solid var(--ph-border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ref-table td { padding: 6px 8px; border-bottom: 1px solid var(--ph-border); color: var(--ph-label); }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table .hi td { color: var(--ph-text); background: var(--ph-surface); }
+  .ref-table .hi td:first-child { border-left: 2px solid var(--ph-green); padding-left: 6px; }
+
+  .bonus-hidden { display: none; }
+  .bonus-show   { display: flex; }
+
+  .unicorn-ov {
+    display: none; position: absolute; inset: 0; z-index: 50;
+    background: var(--ph-black); border-radius: 14px;
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 28px;
+  }
+  .unicorn-ov.show { display: flex; animation: popIn 0.4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+  .u-icon { font-size: 52px; margin-bottom: 12px; animation: float 2.5s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .sec-div { border-color: var(--ph-border); }
+</style>
 </head>
 <body class="flex flex-col items-center">
+<div class="w-full max-w-4xl">
 
-    <div class="w-full max-w-4xl">
-        
-        <!-- Header -->
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-900">Compliance Performance review Calculator</h1>
-            <p class="text-sm text-slate-500">Compliance Performance Framework</p>
-        </div>
+  <!-- Header -->
+  <div class="text-center mb-7">
+    <h1 class="text-2xl font-bold tracking-tight" style="color:var(--ph-text)">Compliance Performance Calculator</h1>
+    <p class="text-sm mt-1" style="color:var(--ph-muted)">Hawkvibes Framework &nbsp;·&nbsp; Q2 2025 &nbsp;·&nbsp; Quality × SLA</p>
+  </div>
 
-        <!-- Workflow Toggle -->
-        <div class="flex justify-center mb-6">
-            <div class="bg-white p-1 rounded-lg shadow-sm border border-slate-200 inline-flex">
-                <button onclick="switchWorkflow('kyc')" id="tab-kyc" class="px-5 py-2 rounded-md text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm">
-                    <i class="fa-solid fa-user-check mr-2"></i> KYC / Onboarding
-                </button>
-                <button onclick="switchWorkflow('monitoring')" id="tab-monitoring" class="px-5 py-2 rounded-md text-sm font-bold transition-all text-slate-500 hover:bg-slate-50">
-                    <i class="fa-solid fa-bell mr-2"></i> Monitoring / Alerts
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            
-            <!-- Input Section -->
-            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                <h2 class="text-lg font-bold mb-4 flex items-center text-indigo-700" id="inputsTitle">
-                    <i class="fa-solid fa-sliders mr-2"></i> KYC Inputs
-                </h2>
-                
-                <!-- Q1 Calibration Checkbox -->
-                <div class="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="q1CalibrationCheck" class="w-4 h-4 text-red-600 rounded focus:ring-red-500 border-gray-300" onchange="calculate()">
-                        <span class="text-sm font-bold text-red-800">Apply Q1 Temporary Calibration Model</span>
-                    </label>
-                    <p class="text-xs text-red-700 mt-1">Splits 70-90% into two tiers: "Safety Net" (70-79%) and "High Potential" (80-89%).</p>
-                </div>
-
-
-                <!-- 1. QA Score Input -->
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">1. Quarterly QA Score (%)</label>
-                    <div class="flex items-center space-x-3">
-                        <input type="range" id="qaInput" min="0" max="100" value="85.0" step="0.1" 
-                            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
-                        <div class="w-20">
-                            <input type="number" id="qaNumber" value="85.0" min="0" max="100" step="0.1"
-                                class="w-full p-1.5 text-center border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold text-indigo-700 text-base">
-                        </div>
-                    </div>
-                    <div class="flex justify-between text-[10px] text-slate-400 mt-2 font-medium uppercase tracking-wider">
-                        <span class="text-red-400">Critical</span>
-                        <span class="text-orange-400">Below</span>
-                        <span class="text-blue-400">Meets</span>
-                        <span class="text-indigo-400">Exceeds</span>
-                        <span class="text-purple-500">Best in Class</span>
-                    </div>
-                </div>
-
-                <!-- 2. Team Multiplier Section -->
-                <div class="mb-6 border-b border-slate-100 pb-4">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">2. Team Collective Measure</label>
-                    
-                    <!-- KYC Specific Input -->
-                    <div id="kycTeamInput" class="fade-in">
-                        <p class="text-xs text-slate-500 mb-2">Metric: % of cases reviewed within 1 business day.</p>
-                        <div class="relative">
-                            <select id="teamTatInput" onchange="calculate();"
-                                class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-sm appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
-                                <option value="0.5">Excellent: ≥ 80% Compliance (+0.5)</option>
-                                <option value="0" selected>Target: 70% to 79.9% Compliance (0.0)</option>
-                                <option value="-1.0">Poor: < 70% Compliance (-1.0)</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Monitoring Specific Input -->
-                    <div id="monitoringTeamInput" class="hidden fade-in space-y-3">
-                        <p class="text-xs text-slate-500 mb-1">Select the team's performance for BOTH targets (Target is ≥ 70%):</p>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <!-- SLA 1 -->
-                            <div class="p-2 bg-slate-50 rounded border border-slate-200">
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">A. Real-Time (12h)</label>
-                                <div class="flex flex-col space-y-1">
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="sla1" value="met" class="peer sr-only" onchange="calculate()" checked>
-                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-green-100 peer-checked:border-green-500 peer-checked:text-green-800 transition-all">
-                                            <i class="fa-solid fa-check mr-1"></i> Met
-                                        </div>
-                                    </label>
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="sla1" value="missed" class="peer sr-only" onchange="calculate()">
-                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-red-100 peer-checked:border-red-500 peer-checked:text-red-800 transition-all">
-                                            <i class="fa-solid fa-xmark mr-1"></i> Missed
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- SLA 2 -->
-                            <div class="p-2 bg-slate-50 rounded border border-slate-200">
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase">B. Retro. (10d)</label>
-                                <div class="flex flex-col space-y-1">
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="sla2" value="met" class="peer sr-only" onchange="calculate()" checked>
-                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-green-100 peer-checked:border-green-500 peer-checked:text-green-800 transition-all">
-                                            <i class="fa-solid fa-check mr-1"></i> Met
-                                        </div>
-                                    </label>
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="sla2" value="missed" class="peer sr-only" onchange="calculate()">
-                                        <div class="px-2 py-1 text-center text-xs rounded border border-slate-300 bg-white text-slate-500 peer-checked:bg-red-100 peer-checked:border-red-500 peer-checked:text-red-800 transition-all">
-                                            <i class="fa-solid fa-xmark mr-1"></i> Missed
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Calculated Result Display -->
-                        <div class="text-right text-xs font-bold text-indigo-600" id="monitoringTeamResult">
-                            Multiplier: +0.5
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 3. Individual Effort Multiplier -->
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-slate-700 mb-2">3. Individual Effort Multiplier</label>
-                    <p class="text-xs text-slate-500 mb-2" id="effortDesc">Analyst's total raw case count relative to peer group.</p>
-                    <div class="relative">
-                        <select id="individualEffortInput" onchange="calculate();"
-                            class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium text-sm appearance-none cursor-pointer hover:bg-slate-50 transition-colors">
-                            <option value="1.0">Top Volume: Top 20% of peers (+1.0)</option>
-                            <option value="0" selected>Standard Volume: Mid 60% of peers (0.0)</option>
-                            <option value="-1.0">Low Volume: Bottom 20% of peers (-1.0)</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bonus Chance Checkbox (Conditional) -->
-                <div id="bonusSection" class="hidden mt-4 bg-amber-50 border border-amber-200 p-3 rounded-lg animate-fade-in">
-                    <div class="flex items-center">
-                        <div class="bg-amber-100 p-1.5 rounded-full mr-3 text-amber-600">
-                            <i class="fa-solid fa-star text-xs"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-xs font-bold text-amber-900">Bonus Eligibility (QA 85-89.9%)</h3>
-                            <label class="flex items-center space-x-2 cursor-pointer mt-1">
-                                <input type="checkbox" id="bonusCheck" class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 border-gray-300">
-                                <span class="text-xs font-bold text-amber-900">Bonus Case Passed (100%)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Result Section -->
-            <div class="lg:col-span-1">
-                <div class="bg-indigo-900 text-white rounded-xl shadow-lg p-6 h-full flex flex-col justify-between relative overflow-hidden ring-1 ring-white/10 min-h-[300px]">
-                    
-                    <!-- Background blobs -->
-                    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
-                    <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-purple-600 rounded-full blur-3xl opacity-20"></div>
-
-                    <div class="relative z-10 text-center lg:text-left">
-                        <h3 class="text-indigo-200 text-xs font-bold uppercase tracking-widest mb-1">Final Score</h3>
-                        <div class="flex items-baseline justify-center lg:justify-start">
-                            <span id="scoreDisplay" class="text-7xl font-bold tracking-tight">0</span>
-                            <span class="text-2xl text-indigo-300 font-light opacity-60">/10</span>
-                        </div>
-                        
-                        <div id="badgeContainer" class="mt-4 flex flex-wrap justify-center lg:justify-start gap-2">
-                            <!-- Badges injected by JS -->
-                        </div>
-                        
-                        <div id="workflowBadge" class="mt-4 p-1.5 bg-indigo-800/50 rounded text-[10px] text-indigo-200 border border-indigo-700/50 inline-block">
-                            Mode: KYC
-                        </div>
-                    </div>
-
-                    <div class="relative z-10 mt-6 border-t border-indigo-700/50 pt-4">
-                        <h4 class="text-[10px] font-bold text-indigo-300 uppercase mb-2 tracking-wider">Breakdown</h4>
-                        <ul class="space-y-2 text-xs text-indigo-100/90" id="logicList">
-                            <!-- Logic steps injected by JS -->
-                        </ul>
-                    </div>
-
-                    <!-- Best in Class Animation Container -->
-                    <div id="unicornAnim" class="hidden absolute inset-0 bg-indigo-900/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-500">
-                        <div class="animate-bounce mb-4">
-                            <i class="fa-solid fa-trophy text-5xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold text-white mb-1 tracking-tight">BEST IN CLASS!</h2>
-                        <p class="text-indigo-200 text-sm mb-6">Perfect 10 Achieved.</p>
-                        <button onclick="closeUnicorn()" class="px-5 py-2 bg-white text-indigo-900 rounded-full text-xs font-bold hover:bg-indigo-50 transition-all shadow-lg">
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+  <!-- Tabs -->
+  <div class="flex justify-center mb-6">
+    <div class="ph-card p-1 inline-flex gap-1">
+      <button onclick="switchWorkflow('kyc')" id="tab-kyc"
+        class="tab-active px-5 py-2 rounded-lg text-sm transition-all">
+        <i class="fa-solid fa-user-check mr-2"></i>KYC / Onboarding
+      </button>
+      <button onclick="switchWorkflow('monitoring')" id="tab-mon"
+        class="tab-inactive px-5 py-2 rounded-lg text-sm transition-all">
+        <i class="fa-solid fa-bell mr-2"></i>Monitoring / Alerts
+      </button>
     </div>
+  </div>
 
-    <script>
-        // State
-        let currentWorkflow = 'kyc';
-        let q1Temporary = false; // Tracks the state of the Q1 checkbox
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        // DOM Elements
-        const q1CalibrationCheck = document.getElementById('q1CalibrationCheck');
-        const tabKyc = document.getElementById('tab-kyc');
-        const tabMonitoring = document.getElementById('tab-monitoring');
-        const kycTeamInput = document.getElementById('kycTeamInput');
-        const monitoringTeamInput = document.getElementById('monitoringTeamInput');
-        const inputsTitle = document.getElementById('inputsTitle');
-        const effortDesc = document.getElementById('effortDesc');
-        const workflowBadge = document.getElementById('workflowBadge');
-        const monitoringTeamResult = document.getElementById('monitoringTeamResult');
+    <!-- ══ INPUT CARD ══ -->
+    <div class="lg:col-span-2 ph-card p-6">
+      <h2 class="text-sm font-bold mb-5 flex items-center gap-2" id="inputTitle" style="color:var(--ph-green)">
+        <i class="fa-solid fa-sliders"></i> KYC / Onboarding Inputs
+      </h2>
 
-        const qaInput = document.getElementById('qaInput');
-        const qaNumber = document.getElementById('qaNumber');
-        const teamTatInput = document.getElementById('teamTatInput'); // KYC
-        const individualEffortInput = document.getElementById('individualEffortInput');
-        const bonusSection = document.getElementById('bonusSection');
-        const bonusCheck = document.getElementById('bonusCheck');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const logicList = document.getElementById('logicList');
-        const badgeContainer = document.getElementById('badgeContainer');
-        const unicornAnim = document.getElementById('unicornAnim');
-        
-        // --- Workflow Switching ---
-        function switchWorkflow(mode) {
-            currentWorkflow = mode;
-            
-            if (mode === 'kyc') {
-                tabKyc.className = "px-5 py-2 rounded-md text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm";
-                tabMonitoring.className = "px-5 py-2 rounded-md text-sm font-bold transition-all text-slate-500 hover:bg-slate-50";
-                
-                kycTeamInput.classList.remove('hidden');
-                monitoringTeamInput.classList.add('hidden');
-                
-                inputsTitle.innerHTML = '<i class="fa-solid fa-sliders mr-2"></i> KYC Inputs';
-                effortDesc.innerText = "Analyst\'s total raw case count relative to peer group.";
-                workflowBadge.innerText = "Mode: KYC/Onboarding";
-            } else {
-                tabMonitoring.className = "px-5 py-2 rounded-md text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm";
-                tabKyc.className = "px-5 py-2 rounded-md text-sm font-bold transition-all text-slate-500 hover:bg-slate-50";
-                
-                kycTeamInput.classList.add('hidden');
-                monitoringTeamInput.classList.remove('hidden');
-                
-                inputsTitle.innerHTML = '<i class="fa-solid fa-sliders mr-2"></i> Monitoring Inputs';
-                effortDesc.innerText = "Analyst\'s total raw alert count relative to peer group.";
-                workflowBadge.innerText = "Mode: Monitoring/Alerts";
-            }
-            calculate();
-        }
+      <!-- PILLAR 1: QA -->
+      <div class="mb-6 pb-6 border-b sec-div">
+        <div class="text-sm font-semibold mb-3 flex items-center gap-2" style="color:var(--ph-text)">
+          <span class="text-xs font-bold px-2 py-0.5 rounded" style="background:var(--ph-surface);color:var(--ph-green);border:1px solid var(--ph-border)">01</span>
+          Quarterly QA Score
+        </div>
+        <div class="flex items-center gap-3 mb-3">
+          <input type="range" id="qaSlider" min="0" max="100" value="90" step="0.1"
+            class="flex-1 cursor-pointer" oninput="syncQA('slider')">
+          <div class="flex items-center gap-1 rounded-lg px-3 py-2"
+            style="background:var(--ph-surface);border:1px solid var(--ph-border2)">
+            <input type="number" id="qaNum" value="90" min="0" max="100" step="0.1"
+              class="w-14 text-center bg-transparent border-none outline-none font-bold text-lg"
+              style="color:var(--ph-green)" oninput="syncQA('num')">
+            <span class="text-sm" style="color:var(--ph-muted)">%</span>
+          </div>
+        </div>
+        <div class="flex justify-between text-[10px] font-semibold uppercase tracking-wider">
+          <span style="color:#ef4444">Critical &lt;80</span>
+          <span style="color:#f59e0b">Below 80–89</span>
+          <span style="color:#4f8fff">Meets 90–94</span>
+          <span style="color:#a78bfa">Exceeds 95–99</span>
+          <span style="color:var(--ph-green)">Perfect 100</span>
+        </div>
+      </div>
 
+      <!-- PILLAR 2a: KYC SLA -->
+      <div class="mb-5 pb-5 border-b sec-div" id="kyc-pillar">
+        <div class="text-sm font-semibold mb-1 flex items-center gap-2" style="color:var(--ph-text)">
+          <span class="text-xs font-bold px-2 py-0.5 rounded" style="background:var(--ph-surface);color:var(--ph-green);border:1px solid var(--ph-border)">02</span>
+          Team SLA — Outflow / Inflow Ratio
+        </div>
+        <p class="text-xs mt-2 mb-4 leading-relaxed" style="color:var(--ph-label)">
+          Enter the monthly ratio for each of the 3 quarter months.
+          <strong style="color:var(--ph-text)">All 3 must be ≥ 1.0</strong> to meet target.
+          Overachieving = all ≥ 1.0 <em>and</em> 3-month average ≥ 1.2.
+        </p>
 
-        // --- Event Listeners ---
-        qaInput.addEventListener('input', () => {
-            qaNumber.value = qaInput.value;
-            calculate();
-        });
-        qaNumber.addEventListener('input', () => {
-            let val = parseFloat(qaNumber.value);
-            if(val > 100) val = 100;
-            if(val < 0) val = 0;
-            qaInput.value = val;
-            calculate();
-        });
-        bonusCheck.addEventListener('change', calculate);
-        q1CalibrationCheck.addEventListener('change', calculate); // Listen to new checkbox
+        <div class="grid grid-cols-3 gap-3 mb-3">
+          <div class="ratio-box" id="rb1">
+            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--ph-muted)">Month 1</div>
+            <input type="number" id="r1" value="1.00" min="0" max="9.99" step="0.01" oninput="calculate()">
+            <div class="text-xs mt-1 h-4" id="rs1"></div>
+          </div>
+          <div class="ratio-box" id="rb2">
+            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--ph-muted)">Month 2</div>
+            <input type="number" id="r2" value="1.00" min="0" max="9.99" step="0.01" oninput="calculate()">
+            <div class="text-xs mt-1 h-4" id="rs2"></div>
+          </div>
+          <div class="ratio-box" id="rb3">
+            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--ph-muted)">Month 3</div>
+            <input type="number" id="r3" value="1.00" min="0" max="9.99" step="0.01" oninput="calculate()">
+            <div class="text-xs mt-1 h-4" id="rs3"></div>
+          </div>
+        </div>
 
+        <div class="flex items-center justify-between rounded-lg px-4 py-3 text-sm mb-1"
+          style="background:var(--ph-surface);border:1px solid var(--ph-border)">
+          <span style="color:var(--ph-label)">
+            Avg: <strong id="ratioAvg" style="color:var(--ph-text)">1.00</strong>
+            &nbsp;·&nbsp;
+            All ≥ 1.0: <strong id="ratioConsec" style="color:var(--ph-green)">✓ Yes</strong>
+          </span>
+          <span class="badge b-blue" id="ratioTag">Target Met &nbsp;+0.5</span>
+        </div>
 
-        // --- Core Calculation ---
-        function calculate() {
-            // 1. Get Inputs & State
-            let inputQA = parseFloat(qaNumber.value);
-            q1Temporary = q1CalibrationCheck.checked; // Read Q1 state
+        <table class="ref-table">
+          <tr><th>SLA Condition</th><th>Multiplier</th></tr>
+          <tr id="krt-over"><td>All ≥ 1.0 &amp; avg ≥ 1.2</td><td style="color:var(--ph-green)">+2.0 &nbsp;Overachieving</td></tr>
+          <tr id="krt-met"><td>All ≥ 1.0 &amp; avg &lt; 1.2</td><td style="color:#4f8fff">+0.5 &nbsp;Target Met</td></tr>
+          <tr id="krt-under"><td>Any month &lt; 1.0</td><td style="color:#ef4444">−1.0 &nbsp;Underachieving</td></tr>
+        </table>
+      </div>
 
-            let effectiveQA = inputQA;
-            let bonusApplied = false;
+      <!-- PILLAR 2b: Monitoring SLAs -->
+      <div class="mb-5 pb-5 border-b sec-div" id="mon-pillar" style="display:none">
+        <div class="text-sm font-semibold mb-1 flex items-center gap-2" style="color:var(--ph-text)">
+          <span class="text-xs font-bold px-2 py-0.5 rounded" style="background:var(--ph-surface);color:var(--ph-green);border:1px solid var(--ph-border)">02</span>
+          Team SLA — Alert Timeliness
+        </div>
+        <p class="text-xs mt-2 mb-4 leading-relaxed" style="color:var(--ph-label)">
+          Select team performance on both resolution targets (operational target ≥ 70% compliance each).
+        </p>
 
-            let teamMult = 0;
-            let effortMult = parseFloat(individualEffortInput.value);
-            
-            // 2. Bonus Chance Logic (85-89.9%)
-            if (inputQA >= 85.0 && inputQA < 90.0) {
-                bonusSection.classList.remove('hidden');
-                if (bonusCheck.checked) {
-                    effectiveQA = 90.0;
-                    bonusApplied = true;
-                }
-            } else {
-                bonusSection.classList.add('hidden');
-                bonusCheck.checked = false;
-            }
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div class="rounded-lg p-3" style="background:var(--ph-surface);border:1px solid var(--ph-border)">
+            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--ph-muted)">A. Real-Time (12h)</div>
+            <div class="flex gap-2">
+              <label class="flex-1"><input type="radio" name="sla1" value="met" checked class="sla-radio" onchange="calculate()"><span class="sla-pill met">✓ Met</span></label>
+              <label class="flex-1"><input type="radio" name="sla1" value="missed" class="sla-radio" onchange="calculate()"><span class="sla-pill missed">✗ Missed</span></label>
+            </div>
+          </div>
+          <div class="rounded-lg p-3" style="background:var(--ph-surface);border:1px solid var(--ph-border)">
+            <div class="text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--ph-muted)">B. Retrospective (10d)</div>
+            <div class="flex gap-2">
+              <label class="flex-1"><input type="radio" name="sla2" value="met" checked class="sla-radio" onchange="calculate()"><span class="sla-pill met">✓ Met</span></label>
+              <label class="flex-1"><input type="radio" name="sla2" value="missed" class="sla-radio" onchange="calculate()"><span class="sla-pill missed">✗ Missed</span></label>
+            </div>
+          </div>
+        </div>
 
-            // 3. Determine Base Score & Cap based on Effective QA
-            let baseScore = 0;
-            let maxCap = 0;
-            let bracketName = "";
-            let bracketColor = "";
-            let reasons = [];
-            let q1Note = q1Temporary ? " (Q1 Calib.)" : "";
+        <div class="flex items-center justify-between rounded-lg px-4 py-3 text-sm mb-1"
+          style="background:var(--ph-surface);border:1px solid var(--ph-border)">
+          <span id="monLabel" style="color:var(--ph-label)">Both targets met</span>
+          <span class="badge b-green" id="monTag">+2.0 &nbsp;Overachieving</span>
+        </div>
 
-            if (q1Temporary) {
-                // TEMPORARY Q1 CALIBRATION MODEL LOGIC - SPLIT TIER
-                if (effectiveQA < 70.0) {
-                    // < 70%: Critical
-                    baseScore = 4.0; maxCap = 4.0; bracketName = "Critical"; bracketColor = "bg-red-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-red-300"></i> Base: ${baseScore} (Critical${q1Note})</li>`);
-                } else if (effectiveQA < 80.0) {
-                    // 70% - 79.9%: The "Safety Net" (Max 6)
-                    baseScore = 5.0; maxCap = 6.0; bracketName = "Satisfactory"; bracketColor = "bg-orange-400";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-shield-halved mt-1 mr-2 text-orange-300"></i> Base: ${baseScore.toFixed(1)} (Safety Net${q1Note})</li>`);
-                } else if (effectiveQA < 90.0) {
-                    // 80% - 89.9%: The "High Potential" (Max 8)
-                    baseScore = 6.5; maxCap = 8.0; bracketName = "High Potential"; bracketColor = "bg-blue-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-arrow-trend-up mt-1 mr-2 text-blue-300"></i> Base: ${baseScore.toFixed(1)} (High Potential${q1Note})</li>`);
-                } else if (effectiveQA < 95.0) {
-                    // 90-94.9%
-                    baseScore = 7.0; maxCap = 8.0; bracketName = "Meets Exp."; bracketColor = "bg-blue-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-300"></i> Base: ${baseScore} (Meets Exp.)</li>`);
-                } else if (effectiveQA < 100.0) {
-                    // 95-99.9%
-                    baseScore = 8.5; maxCap = 9.0; bracketName = "Exceeds Exp."; bracketColor = "bg-indigo-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check-double mt-1 mr-2 text-green-300"></i> Base: ${baseScore.toFixed(1)} (Exceeds Exp.)</li>`);
-                } else {
-                    // 100%
-                    baseScore = 9.0; maxCap = 10.0; bracketName = "Best in Class"; bracketColor = "bg-purple-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-crown mt-1 mr-2 text-yellow-300"></i> Base: ${baseScore} (Perfect)</li>`);
-                }
-            } else {
-                // STANDARD MODEL LOGIC
-                if (effectiveQA < 80.0) {
-                    baseScore = 4.0; maxCap = 4.0; bracketName = "Critical"; bracketColor = "bg-red-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-red-300"></i> Base: ${baseScore} (Critical Zone)</li>`);
-                } else if (effectiveQA < 90.0) {
-                    baseScore = 5.0; maxCap = 6.0; bracketName = "Below Exp."; bracketColor = "bg-orange-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2 text-orange-300"></i> Base: ${baseScore} (Below Exp.)</li>`);
-                } else if (effectiveQA < 95.0) {
-                    baseScore = 7.0; maxCap = 8.0; bracketName = "Meets Exp."; bracketColor = "bg-blue-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check mt-1 mr-2 text-green-300"></i> Base: ${baseScore} (Meets Exp.)</li>`);
-                } else if (effectiveQA < 100.0) {
-                    baseScore = 8.5; maxCap = 9.0; bracketName = "Exceeds Exp."; bracketColor = "bg-indigo-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-check-double mt-1 mr-2 text-green-300"></i> Base: ${baseScore.toFixed(1)} (Exceeds Exp.)</li>`);
-                } else {
-                    baseScore = 9.0; maxCap = 10.0; bracketName = "Best in Class"; bracketColor = "bg-purple-500";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-crown mt-1 mr-2 text-yellow-300"></i> Base: ${baseScore} (Perfect)</li>`);
-                }
-            }
-            
-            let currentScore = baseScore;
+        <table class="ref-table">
+          <tr><th>SLA Condition</th><th>Multiplier</th></tr>
+          <tr id="mrt-over"><td>Both targets met</td><td style="color:var(--ph-green)">+2.0 &nbsp;Overachieving</td></tr>
+          <tr id="mrt-met"><td>One target met</td><td style="color:#4f8fff">+0.5 &nbsp;Target Met</td></tr>
+          <tr id="mrt-under"><td>Both targets missed</td><td style="color:#ef4444">−1.0 &nbsp;Underachieving</td></tr>
+        </table>
+      </div>
 
-            // 4. Calculate Multipliers
-            
-            if (currentWorkflow === 'kyc') {
-                // KYC Team Logic
-                teamMult = parseFloat(teamTatInput.value);
-                let tText = teamMult === 0.5 ? "+0.5 (Exc.)" : (teamMult === 0 ? "0.0 (Tgt)" : "-1.0 (Poor)");
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-indigo-300"></i> Team TAT: ${tText}</li>`);
-            
-            } else {
-                // Monitoring Team Logic: 2 SLAs
-                const sla1 = document.querySelector('input[name="sla1"]:checked').value;
-                const sla2 = document.querySelector('input[name="sla2"]:checked').value;
-                
-                if (sla1 === 'met' && sla2 === 'met') {
-                    teamMult = 0.5;
-                    monitoringTeamResult.innerText = "Multiplier: +0.5 (Exc)";
-                    monitoringTeamResult.className = "text-right text-xs font-bold text-green-600";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-green-300"></i> Team: Met BOTH (+0.5)</li>`);
-                } else if (sla1 === 'missed' && sla2 === 'missed') {
-                    teamMult = -1.0;
-                    monitoringTeamResult.innerText = "Multiplier: -1.0 (Poor)";
-                    monitoringTeamResult.className = "text-right text-xs font-bold text-red-600";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-red-300"></i> Team: Missed BOTH (-1.0)</li>`);
-                } else {
-                    teamMult = 0.0;
-                    monitoringTeamResult.innerText = "Multiplier: 0.0 (Tgt)";
-                    monitoringTeamResult.className = "text-right text-xs font-bold text-indigo-600";
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-users mt-1 mr-2 text-indigo-300"></i> Team: Met ONE (0.0)</li>`);
-                }
-            }
+      <!-- Bonus Chance -->
+      <div class="bonus-hidden items-start gap-3 rounded-xl p-4" id="bonusPanel"
+        style="background:rgba(245,200,66,0.05);border:1px solid rgba(245,200,66,0.18)">
+        <i class="fa-solid fa-star mt-0.5 text-yellow-400 text-sm flex-shrink-0"></i>
+        <div>
+          <label class="flex items-center gap-2 cursor-pointer font-semibold text-sm text-yellow-400">
+            <input type="checkbox" id="bonusCheck" class="w-4 h-4 rounded cursor-pointer"
+              style="accent-color:#f5c842" onchange="calculate()">
+            Bonus Case Passed (100%)
+          </label>
+          <p class="text-xs mt-1 leading-relaxed" style="color:var(--ph-label)">
+            QA is 85–89.9% — if the blind review case is perfect, effective QA lifts to 90%, unlocking a higher ceiling.
+          </p>
+        </div>
+      </div>
 
-            // Apply Team Mult
-            currentScore += teamMult;
+    </div><!-- /input card -->
 
-            // Apply Effort Mult
-            currentScore += effortMult;
-            let eText = effortMult === 1.0 ? "+1.0 (Top)" : (effortMult === 0 ? "0.0 (Std)" : "-1.0 (Low)");
-            reasons.push(`<li class="flex items-start"><i class="fa-solid fa-fire-extinguisher mt-1 mr-2 text-indigo-300"></i> Effort: ${eText}</li>`);
+    <!-- ══ SCORE PANEL ══ -->
+    <div class="score-panel p-6 flex flex-col justify-between relative overflow-hidden" style="min-height:320px">
 
-            // 5. Apply Caps
-            if (currentScore > maxCap) {
-                currentScore = maxCap;
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-lock mt-1 mr-2 text-red-400"></i> Capped at ${maxCap.toFixed(1)} by QA.</li>`);
-            }
+      <!-- Glow blobs -->
+      <div class="absolute top-0 right-0 -mr-16 -mt-16 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-10" style="background:var(--ph-green)"></div>
+      <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-5" style="background:#4f8fff"></div>
 
-            // Quality Floor (100% QA + >= Std Effort -> Min 9.0)
-            if (inputQA === 100.0 && effortMult >= 0.0) {
-                if (currentScore < 9.0) {
-                    currentScore = 9.0;
-                    reasons.push(`<li class="flex items-start"><i class="fa-solid fa-shield-halved mt-1 mr-2 text-blue-300"></i> Floor: 100% QA = Min 9.0</li>`);
-                }
-            }
+      <div class="relative z-10">
+        <h3 class="text-xs font-bold uppercase tracking-widest mb-1" style="color:var(--ph-muted)">Final Score</h3>
+        <div class="flex items-baseline gap-1">
+          <span id="scoreNum" class="sc-meets font-black" style="font-size:82px;line-height:1;letter-spacing:-0.04em;transition:color 0.3s">7</span>
+          <span class="text-xl font-light" style="color:var(--ph-muted)">/10</span>
+        </div>
+        <div id="badgeRow" class="flex flex-wrap gap-2 mt-3"></div>
+        <div class="mt-3 text-xs px-2 py-1 rounded inline-block" id="modeChip"
+          style="background:var(--ph-surface);color:var(--ph-muted);border:1px solid var(--ph-border)">
+          Mode: KYC / Onboarding
+        </div>
+      </div>
 
-            // Best in Class Check
-            let isBestInClass = false;
-            
-            if (Math.round(currentScore) === 10) {
-                 if (inputQA === 100.0 && (teamMult + effortMult) === 1.5) {
-                    isBestInClass = true;
-                 } else {
-                     if (inputQA < 100.0 || (teamMult + effortMult) < 1.5) {
-                         currentScore = Math.min(currentScore, 9.4);
-                         reasons.push(`<li class="flex items-start"><i class="fa-solid fa-circle-info mt-1 mr-2 text-indigo-300"></i> 10 requires Max Mults.</li>`);
-                     } else {
-                         isBestInClass = true;
-                     }
-                 }
-            }
+      <div class="relative z-10 mt-5 pt-5 border-t sec-div">
+        <h4 class="text-xs font-bold uppercase tracking-widest mb-3" style="color:var(--ph-muted)">Breakdown</h4>
+        <ul class="space-y-2 text-xs" id="bkList"></ul>
+      </div>
 
-            // Rounding
-            currentScore = Math.max(1.0, Math.min(10.0, currentScore));
-            let finalRoundedScore = Math.round(currentScore);
-            scoreDisplay.innerText = finalRoundedScore;
-            
-            if (currentScore !== finalRoundedScore) {
-                reasons.push(`<li class="flex items-start"><i class="fa-solid fa-calculator mt-1 mr-2 text-slate-400"></i> Value ${currentScore.toFixed(1)} rounded to ${finalRoundedScore}.</li>`);
-            }
+      <!-- Unicorn overlay -->
+      <div class="unicorn-ov" id="unicornOv">
+        <div class="u-icon">🏆</div>
+        <div class="text-xl font-black mb-1 tracking-tight" style="color:var(--ph-green)">BEST IN CLASS!</div>
+        <div class="text-xs uppercase tracking-widest mb-2" id="uPath" style="color:var(--ph-muted)"></div>
+        <div class="text-xs leading-relaxed mb-5" id="uSub" style="color:var(--ph-label)"></div>
+        <button onclick="closeUnicorn()"
+          class="px-5 py-2 rounded-full text-xs font-bold transition-all"
+          style="background:var(--ph-surface);color:var(--ph-green);border:1px solid var(--ph-green2)">
+          Close
+        </button>
+      </div>
 
-            logicList.innerHTML = reasons.join('');
-            
-            badgeContainer.innerHTML = `
-                <span class="${bracketColor} text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm">${bracketName}</span>
-            `;
-            if (bonusApplied) {
-                 badgeContainer.innerHTML += `<span class="bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm"><i class="fa-solid fa-star mr-1"></i> Bonus</span>`;
-            }
+    </div><!-- /score panel -->
+  </div><!-- /grid -->
+</div><!-- /wrapper -->
 
-            if (isBestInClass) {
-                unicornAnim.classList.remove('hidden');
-            } else {
-                unicornAnim.classList.add('hidden');
-            }
-        }
+<script>
+let workflow = 'kyc';
 
-        function closeUnicorn() {
-            unicornAnim.classList.add('hidden');
-        }
+function syncQA(src) {
+  const s = document.getElementById('qaSlider');
+  const n = document.getElementById('qaNum');
+  if (src === 'slider') {
+    n.value = parseFloat(s.value).toFixed(1);
+  } else {
+    let v = parseFloat(n.value);
+    if (isNaN(v)) v = 0;
+    v = Math.min(100, Math.max(0, v));
+    n.value = v; s.value = v;
+  }
+  calculate();
+}
 
-        // Init
-        switchWorkflow('kyc'); // Default
-    </script>
+function switchWorkflow(mode) {
+  workflow = mode;
+  const isKyc = mode === 'kyc';
+  const tkb = 'px-5 py-2 rounded-lg text-sm transition-all';
+  document.getElementById('tab-kyc').className = (isKyc ? 'tab-active ' : 'tab-inactive ') + tkb;
+  document.getElementById('tab-mon').className  = (!isKyc ? 'tab-active ' : 'tab-inactive ') + tkb;
+  document.getElementById('kyc-pillar').style.display = isKyc  ? '' : 'none';
+  document.getElementById('mon-pillar').style.display = !isKyc ? '' : 'none';
+  document.getElementById('inputTitle').innerHTML =
+    `<i class="fa-solid fa-sliders"></i> ${isKyc ? 'KYC / Onboarding' : 'Monitoring / Alerts'} Inputs`;
+  document.getElementById('modeChip').textContent =
+    `Mode: ${isKyc ? 'KYC / Onboarding' : 'Monitoring / Alerts'}`;
+  calculate();
+}
+
+function getQABand(qa) {
+  if (qa < 80)  return { base:3.0, cap:4.0,  name:'Critical Zone',         cls:'sc-critical', b:'b-red',    bl:'Critical' };
+  if (qa < 90)  return { base:5.0, cap:6.0,  name:'Below Expectations',    cls:'sc-below',    b:'b-orange', bl:'Below Exp.' };
+  if (qa < 95)  return { base:7.0, cap:null, name:'Meets Expectations',    cls:'sc-meets',    b:'b-blue',   bl:'Meets Exp.' };
+  if (qa < 100) return { base:8.0, cap:null, name:'Exceeds Expectations',  cls:'sc-exceeds',  b:'b-purple', bl:'Exceeds Exp.' };
+  return         { base:9.0, cap:null, name:'Perfect QA',               cls:'sc-best',     b:'b-green',  bl:'Perfect QA' };
+}
+
+function getRatioMult() {
+  const vals = [1,2,3].map(i => parseFloat(document.getElementById('r'+i).value) || 0);
+  const avg   = vals.reduce((a,b) => a+b, 0) / 3;
+  const allOk = vals.every(v => v >= 1.0);
+
+  vals.forEach((v,i) => {
+    const rb = document.getElementById('rb'+(i+1));
+    const rs = document.getElementById('rs'+(i+1));
+    rb.classList.toggle('good', v >= 1.0);
+    rb.classList.toggle('bad',  v < 1.0);
+    rs.textContent = v >= 1.0 ? '✓' : '✗';
+    rs.style.color = v >= 1.0 ? 'var(--ph-green)' : '#ef4444';
+  });
+
+  document.getElementById('ratioAvg').textContent = avg.toFixed(2);
+  const consec = document.getElementById('ratioConsec');
+  consec.textContent = allOk ? '✓ Yes' : '✗ No';
+  consec.style.color = allOk ? 'var(--ph-green)' : '#ef4444';
+
+  const rt = document.getElementById('ratioTag');
+  ['krt-over','krt-met','krt-under'].forEach(id => document.getElementById(id).className = '');
+
+  if (!allOk) {
+    rt.className = 'badge b-red'; rt.textContent = '−1.0  Underachieving';
+    document.getElementById('krt-under').className = 'hi';
+    return -1.0;
+  } else if (avg >= 1.2) {
+    rt.className = 'badge b-green'; rt.textContent = '+2.0  Overachieving';
+    document.getElementById('krt-over').className = 'hi';
+    return 2.0;
+  } else {
+    rt.className = 'badge b-blue'; rt.textContent = '+0.5  Target Met';
+    document.getElementById('krt-met').className = 'hi';
+    return 0.5;
+  }
+}
+
+function getMonMult() {
+  const s1 = document.querySelector('input[name="sla1"]:checked').value;
+  const s2 = document.querySelector('input[name="sla2"]:checked').value;
+  const ml  = document.getElementById('monLabel');
+  const mt  = document.getElementById('monTag');
+  ['mrt-over','mrt-met','mrt-under'].forEach(id => document.getElementById(id).className = '');
+
+  if (s1 === 'met' && s2 === 'met') {
+    ml.textContent = 'Both targets met';
+    mt.className = 'badge b-green'; mt.textContent = '+2.0  Overachieving';
+    document.getElementById('mrt-over').className = 'hi';
+    return 2.0;
+  } else if (s1 === 'missed' && s2 === 'missed') {
+    ml.textContent = 'Both targets missed';
+    mt.className = 'badge b-red'; mt.textContent = '−1.0  Underachieving';
+    document.getElementById('mrt-under').className = 'hi';
+    return -1.0;
+  } else {
+    ml.textContent = 'One target met';
+    mt.className = 'badge b-blue'; mt.textContent = '+0.5  Target Met';
+    document.getElementById('mrt-met').className = 'hi';
+    return 0.5;
+  }
+}
+
+function calculate() {
+  let qa = parseFloat(document.getElementById('qaNum').value) || 0;
+  qa = Math.min(100, Math.max(0, qa));
+  const rawQA = qa;
+
+  // Bonus
+  const bp = document.getElementById('bonusPanel');
+  const bc = document.getElementById('bonusCheck');
+  let bonusApplied = false;
+  if (qa >= 85 && qa < 90) {
+    bp.classList.remove('bonus-hidden'); bp.classList.add('bonus-show');
+    if (bc.checked) { qa = 90; bonusApplied = true; }
+  } else {
+    bp.classList.add('bonus-hidden'); bp.classList.remove('bonus-show');
+    bc.checked = false;
+  }
+
+  const band = getQABand(qa);
+  const slaM = workflow === 'kyc' ? getRatioMult() : getMonMult();
+  let score  = band.base + slaM;
+  const rows = [];
+
+  rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-circle-half-stroke mt-0.5" style="color:var(--ph-green)"></i><span style="color:var(--ph-label)">QA Base: <strong style="color:var(--ph-text)">${band.base.toFixed(1)}</strong> (${band.name})</span></li>`);
+
+  const si = slaM === 2.0 ? 'var(--ph-green)' : slaM === 0.5 ? '#4f8fff' : '#ef4444';
+  const sl = slaM === 2.0 ? '+2.0 (Overachieving)' : slaM === 0.5 ? '+0.5 (Target Met)' : '−1.0 (Underachieving)';
+  rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-arrow-trend-up mt-0.5" style="color:${si}"></i><span style="color:var(--ph-label)">SLA: <strong style="color:var(--ph-text)">${sl}</strong></span></li>`);
+
+  if (bonusApplied) {
+    rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-star mt-0.5" style="color:#f5c842"></i><span style="color:var(--ph-label)">Bonus case → QA lifted to <strong style="color:var(--ph-text)">90%</strong></span></li>`);
+  }
+
+  // Hard cap bottom two bands
+  if (band.cap !== null && score > band.cap) {
+    score = band.cap;
+    rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-lock mt-0.5" style="color:#ef4444"></i><span style="color:var(--ph-label)">Hard cap at <strong style="color:var(--ph-text)">${band.cap.toFixed(1)}</strong> — QA quality must improve first</span></li>`);
+  }
+
+  // Quality floor
+  if (qa === 100 && score < 9.0) {
+    score = 9.0;
+    rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-shield-halved mt-0.5" style="color:#4f8fff"></i><span style="color:var(--ph-label)">Quality floor: 100% QA guarantees <strong style="color:var(--ph-text)">9.0</strong></span></li>`);
+  }
+
+  // Best-in-Class: Path 1 = 100% QA + positive SLA; Path 2 = 95-99.9% + Overachieving
+  const isBic = (qa === 100 && slaM >= 0.5) || (rawQA >= 95 && rawQA < 100 && slaM === 2.0);
+  let bicPath = '', bicSub = '';
+  if (isBic) {
+    score = 10;
+    if (qa === 100) {
+      bicPath = 'Path 1 · Perfect QA + Positive SLA';
+      bicSub  = '100% accuracy and the team met its SLA targets.';
+    } else {
+      bicPath = 'Path 2 · Exceeds Expectations + Overachieving SLA';
+      bicSub  = `${rawQA.toFixed(1)}% QA and a 3-month average ≥ 1.2 — operational excellence earns the perfect score.`;
+    }
+    rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-trophy mt-0.5" style="color:#f5c842"></i><span style="color:var(--ph-label)">Best-in-Class gate met → <strong style="color:var(--ph-text)">10</strong></span></li>`);
+  }
+
+  score = Math.max(1, Math.min(10, score));
+  const final = Math.round(score);
+
+  if (!isBic && Math.abs(score - final) > 0.01) {
+    rows.push(`<li class="flex items-start gap-2"><i class="fa-solid fa-calculator mt-0.5" style="color:var(--ph-muted)"></i><span style="color:var(--ph-label)">Raw ${score.toFixed(1)} rounded to <strong style="color:var(--ph-text)">${final}</strong></span></li>`);
+  }
+
+  // Render
+  const sn = document.getElementById('scoreNum');
+  sn.textContent = final; sn.className = `font-black ${band.cls}`;
+  sn.style.cssText = 'font-size:82px;line-height:1;letter-spacing:-0.04em;transition:color 0.3s';
+
+  let badges = `<span class="badge ${band.b}">${band.bl}</span>`;
+  if (slaM ===  2.0) badges += `<span class="badge b-green">SLA Overachieving</span>`;
+  if (slaM ===  0.5) badges += `<span class="badge b-blue">SLA Target Met</span>`;
+  if (slaM === -1.0) badges += `<span class="badge b-red">SLA Under</span>`;
+  if (bonusApplied)  badges += `<span class="badge b-gold">Bonus Applied</span>`;
+  if (isBic)         badges += `<span class="badge b-gold">Best in Class</span>`;
+  document.getElementById('badgeRow').innerHTML = badges;
+  document.getElementById('bkList').innerHTML   = rows.join('');
+
+  const uo = document.getElementById('unicornOv');
+  if (isBic) {
+    document.getElementById('uPath').textContent = bicPath;
+    document.getElementById('uSub').textContent  = bicSub;
+    uo.classList.add('show');
+  } else {
+    uo.classList.remove('show');
+  }
+}
+
+function closeUnicorn() { document.getElementById('unicornOv').classList.remove('show'); }
+
+calculate();
+</script>
 </body>
 </html>
